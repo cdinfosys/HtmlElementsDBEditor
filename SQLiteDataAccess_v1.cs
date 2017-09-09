@@ -17,9 +17,9 @@ namespace HtmlElementsDBEditor
         #region SQL statements
             private const String SQLite_Select_AttributeTypes = @"SELECT AttributeTypeID, Description FROM AttributeType";
 
-            private const String SQLite_Add_AttributeType = @"INSERT INTO AttributeType(AttributeTypeID, Description) VALUES ({0}, {1})";
-            private const String SQLite_Update_AttributeType = @"UPDATE AttributeType SET Description = '{1}' WHERE AttributeTypeID = {0}";
-            private const String SQLite_Delete_AttributeType = @"DELETE FROM AttributeType WHERE AttributeTypeID = {0}";
+            private const String SQLite_Add_AttributeType = @"INSERT INTO AttributeType(AttributeTypeID, Description) VALUES ($pAttributeTypeId, $pDescription)";
+            private const String SQLite_Update_AttributeType = @"UPDATE AttributeType SET Description = $pDescription WHERE AttributeTypeID = $pAttributeTypeId";
+            private const String SQLite_Delete_AttributeType = @"DELETE FROM AttributeType WHERE AttributeTypeID = $pAttributeTypeId";
         #endregion SQL statements
 
         #region Private data members
@@ -92,33 +92,66 @@ namespace HtmlElementsDBEditor
                 IEnumerable<AttributeTypeDTO> deletedRecords
             )
             {
-                foreach (AttributeTypeDTO addedRecord in addedRecords)
+                SQLiteParameter paramDescription = new SQLiteParameter("$pDescription", DbType.String)
                 {
-                    using (SQLiteCommand dbCommand = new SQLiteCommand())
+                    Direction = ParameterDirection.Input
+                };
+
+                SQLiteParameter paramAttributeId = new SQLiteParameter("$pAttributeTypeId", DbType.Int32)
+                {
+                    Direction = ParameterDirection.Input
+                };
+
+                if (addedRecords != null)
+                {
+
+                    foreach (AttributeTypeDTO addedRecord in addedRecords)
                     {
-                        dbCommand.CommandText = String.Format(SQLite_Add_AttributeType, addedRecord.AttributeTypeId, addedRecord.Description);
-                        dbCommand.CommandType = CommandType.Text;
-                        dbCommand.ExecuteNonQuery();
+                        paramAttributeId.Value = addedRecord.AttributeTypeId;
+                        paramDescription.Value = addedRecord.Description;
+
+                        using (SQLiteCommand dbCommand = this.mDbConnection.CreateCommand())
+                        {
+                            dbCommand.CommandText = SQLite_Add_AttributeType;
+                            dbCommand.CommandType = CommandType.Text;
+                            dbCommand.Parameters.Add(paramAttributeId);
+                            dbCommand.Parameters.Add(paramDescription);
+                            dbCommand.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                foreach (AttributeTypeDTO updatedRecord in addedRecords)
+                if (updatedRecords != null)
                 {
-                    using (SQLiteCommand dbCommand = new SQLiteCommand())
+                    foreach (AttributeTypeDTO updatedRecord in updatedRecords)
                     {
-                        dbCommand.CommandText = String.Format(SQLite_Update_AttributeType, updatedRecord.AttributeTypeId, updatedRecord.Description);
-                        dbCommand.CommandType = CommandType.Text;
-                        dbCommand.ExecuteNonQuery();
+                        paramAttributeId.Value = updatedRecord.AttributeTypeId;
+                        paramDescription.Value = updatedRecord.Description;
+
+                        using (SQLiteCommand dbCommand = this.mDbConnection.CreateCommand())
+                        {
+                            dbCommand.CommandText = SQLite_Update_AttributeType;
+                            dbCommand.CommandType = CommandType.Text;
+                            dbCommand.Parameters.Add(paramAttributeId);
+                            dbCommand.Parameters.Add(paramDescription);
+                            dbCommand.ExecuteNonQuery();
+                        }
                     }
                 }
 
-                foreach (AttributeTypeDTO deletedRecord in deletedRecords)
+                if (deletedRecords != null)
                 {
-                    using (SQLiteCommand dbCommand = new SQLiteCommand())
+                    foreach (AttributeTypeDTO deletedRecord in deletedRecords)
                     {
-                        dbCommand.CommandText = String.Format(SQLite_Delete_AttributeType, deletedRecord.AttributeTypeId);
-                        dbCommand.CommandType = CommandType.Text;
-                        dbCommand.ExecuteNonQuery();
+                        paramAttributeId.Value = deletedRecord.AttributeTypeId;
+                        using (SQLiteCommand dbCommand = this.mDbConnection.CreateCommand())
+                        {
+                            
+                            dbCommand.CommandText = SQLite_Delete_AttributeType;
+                            dbCommand.CommandType = CommandType.Text;
+                            dbCommand.Parameters.Add(paramAttributeId);
+                            dbCommand.ExecuteNonQuery();
+                        }
                     }
                 }
             }

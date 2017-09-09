@@ -183,6 +183,10 @@ namespace HtmlElementsDBEditor
                 // Tools menu
                 this.attributeTypesMenuItem.Enabled = enableDocumentMenus;
                 this.cssPropertyTypesMenuItem.Enabled = enableDocumentMenus;
+
+                // List box and tab control
+                this.htmlElementsListBox.Enabled = enableDocumentMenus;
+                this.attributesTabControl.Enabled = enableDocumentMenus;
             }
         #endregion // Helper methods
 

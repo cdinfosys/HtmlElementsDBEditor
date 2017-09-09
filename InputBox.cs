@@ -18,16 +18,24 @@ namespace HtmlElementsDBEditor
         /// <param name="validationData">
         ///     Data to validate.
         /// </param>
+        /// <paaram name="additionalData">
+        ///     Data that was passed to the constructor.
+        /// </paaram>
         /// <returns>
         ///     Must return <c>true</c> if the data is valid or <c>false</c> if the value is invalid.
         /// </returns>
-        public delegate Boolean ValidateInputValueProc(String validationData);
+        public delegate Boolean ValidateInputValueProc(String validationData, Object additionalData);
 
         #region Private data members
             /// <summary>
             ///     Delegate to validate user input.
             /// </summary>
             private ValidateInputValueProc mValidationCallback;
+
+            /// <summary>
+            ///     Additional data passed by the user.
+            /// </summary>
+            private Object mAdditionalData;
         #endregion Private data members
 
         #region Construction
@@ -40,7 +48,7 @@ namespace HtmlElementsDBEditor
             /// <param name="dialogCaption">
             ///     Dialog caption.
             /// </param>
-            public InputBox(String initialValue = "", String dialogCaption = null)
+            public InputBox(String initialValue = "", String dialogCaption = null, Object additionalData = null)
             {
                 InitializeComponent();
 
@@ -50,6 +58,8 @@ namespace HtmlElementsDBEditor
                 }
 
                 this.valueTextBox.Text = initialValue;
+
+                this.mAdditionalData = additionalData;
             }
 
             /// <summary>
@@ -62,7 +72,7 @@ namespace HtmlElementsDBEditor
             /// <param name="dialogCaption">
             ///     Dialog caption.
             /// </param>
-            public InputBox(ValidateInputValueProc validationCallbackProc, String initialValue = "", String dialogCaption = null)
+            public InputBox(ValidateInputValueProc validationCallbackProc, String initialValue = "", String dialogCaption = null, Object additionalData = null)
             {
                 InitializeComponent();
 
@@ -74,6 +84,8 @@ namespace HtmlElementsDBEditor
                 }
 
                 this.valueTextBox.Text = initialValue;
+
+                this.mAdditionalData = additionalData;
             }
         #endregion // Construction
 
@@ -83,20 +95,6 @@ namespace HtmlElementsDBEditor
             /// </summary>
             public String Value => this.valueTextBox.Text;
         #endregion Public properties
-
-        #region Base class method overrides
-            protected override void OnValidating(CancelEventArgs eventArgs)
-            {
-                base.OnValidating(eventArgs);
-                if (!eventArgs.Cancel)
-                {
-                    if (this.mValidationCallback != null)
-                    {
-                        eventArgs.Cancel = this.mValidationCallback.Invoke(this.valueTextBox.Text);
-                    }
-                }
-            }
-        #endregion // Base class method overrides
 
         #region Event handlers
             /// <summary>
@@ -108,7 +106,7 @@ namespace HtmlElementsDBEditor
             {
                 if (this.mValidationCallback != null)
                 {
-                    if (this.mValidationCallback.Invoke(this.valueTextBox.Text))
+                    if (this.mValidationCallback.Invoke(this.valueTextBox.Text, mAdditionalData))
                     {
                         this.Close();
                     }

@@ -6,6 +6,8 @@ using HtmlElementsDB;
 using System.Data.SQLite;
 using System.Data;
 using HtmlElementsDBEditor.Properties;
+using System.IO;
+using System.Linq;
 
 namespace HtmlElementsDBEditor
 {
@@ -142,9 +144,23 @@ namespace HtmlElementsDBEditor
             }
 
             /// <summary>
-            ///     Returns a flag that indicates if the document is loaded.
+            ///     Gets or sets a flag that indicates if the document is loaded.
             /// </summary>
-            public Boolean IsLoaded => this.mIsLoaded;
+            public Boolean IsLoaded
+            {
+                get { return this.mIsLoaded; }
+                private set
+                {
+                    if (this.mIsLoaded != value)
+                    {
+                        this.mIsLoaded = value;
+                        if (this.DocumentOpen != null)
+                        {
+                            this.DocumentOpen.Invoke(this, true);
+                        }
+                    }
+                }
+             }
 
             /// <summary>
             ///     Gets the path to the document.
@@ -179,6 +195,7 @@ namespace HtmlElementsDBEditor
                 if (canLoad)
                 {
                     LoadDocument(dbFilePath);
+                    this.mDocumentPath = dbFilePath;
                 }
             }
 
@@ -210,7 +227,6 @@ namespace HtmlElementsDBEditor
                 if (frameWindow.GetFilePath(ref newFilePath))
                 {
                     SaveNewDocument(newFilePath);
-                    this.mDocumentPath = newFilePath;
                 }
             }
 
@@ -219,25 +235,12 @@ namespace HtmlElementsDBEditor
             /// </summary>
             public void CreateNew()
             {
-                // First check if there are changes to save
-                bool canCreate = false;
-                if (this.IsModified)
+                if (!this.Close())
                 {
-                    if (this.Close())
-                    {
-                        canCreate = true;
-                    }
-                }
-                else
-                {
-                    canCreate = true;
+                    return;
                 }
 
-                // Check if we can proceed with loading the new document.
-                if (canCreate)
-                {
-                    CreateDocument();
-                }
+                CreateDocument();
             }
 
             /// <summary>
@@ -262,6 +265,7 @@ namespace HtmlElementsDBEditor
                     }
                 }
 
+                CloseDocument();
                 return true;
             }
 
@@ -319,14 +323,21 @@ namespace HtmlElementsDBEditor
             }
 
             /// <summary>
-            ///     Gets the list of attribute data types
+            ///     Creates a copy of the attribute types collection
             /// </summary>
             /// <returns>
             ///     Returns a reference to the list of attribute data types
             /// </returns>
-            public IEnumerable<DataStorageItem<AttributeTypeDTO>> GetAttributeDataTypesTracking()
+            public IEnumerable<DataStorageItem<AttributeTypeDTO>> CreateAttributeDataTypesCopy()
             {
-                return this.mAttributeDataTypes;
+                List<DataStorageItem<AttributeTypeDTO>> result = new List<DataStorageItem<AttributeTypeDTO>>();
+
+                foreach (DataStorageItem<AttributeTypeDTO> attr in this.mAttributeDataTypes)
+                {
+                    result.Add(attr.Clone() as DataStorageItem<AttributeTypeDTO>);
+                }
+
+                return result;
             }
         #endregion // Public methods
 
@@ -337,14 +348,12 @@ namespace HtmlElementsDBEditor
             private void CloseDocument()
             {
                 mHtmlElements.Clear();
+                mAttributeDataTypes.Clear();
+
                 mDocumentPath = String.Empty;
 
                 this.IsModified = false;
-                this.mIsLoaded = false;
-                if (this.DocumentOpen != null)
-                {
-                    this.DocumentOpen.Invoke(this, false);
-                }
+                this.IsLoaded = false;
             }
 
             /// <summary>
@@ -363,6 +372,7 @@ namespace HtmlElementsDBEditor
                     {
                         case METADATA_ID_DATABASE_SCHEMA_VERSION_1:
                             ReadDatabaseSchemeV1(dbConnection);
+                            this.IsLoaded = true;
                             break;
 
                         default:
@@ -401,9 +411,33 @@ namespace HtmlElementsDBEditor
 
                 AddUpdateDeleteSorter<AttributeTypeDTO> sorter = new AddUpdateDeleteSorter<AttributeTypeDTO>(this.mAttributeDataTypes);
                 dataAccess.AddUpdateDelete_AttributeTypes(sorter.AddedRecords, sorter.ModifiedRecords, sorter.DeletedRecords);
+                PostSaveUpdateAndRemove(this.mAttributeDataTypes);
+            }
 
-                foreach (var attributeTypeRec in this.mAttributeDataTypes)
+            /// <summary>
+            ///     Helper for <see cref="StoreDatabaseSchemaV1"/> to remove deleted items from a list and clear the tracking flags on the remaining list items.
+            /// </summary>
+            /// <typeparam name="T">
+            ///     Type of object stored in the list
+            /// </typeparam>
+            /// <param name="list">
+            ///     Reference to the list to update.
+            /// </param>
+            private void PostSaveUpdateAndRemove<T>(IList<DataStorageItem<T>> list) where T : class, ICloneable
+            {
+                if (list != null)
                 {
+                    for (int index = list.Count - 1; index >=0; --index)
+                    {
+                        if (list[index].Deleted)
+                        {
+                            list.RemoveAt(index);
+                        }
+                        else
+                        {
+                            list[index].ClearTrackingFlags();
+                        }
+                    }
                 }
             }
 
@@ -444,12 +478,8 @@ namespace HtmlElementsDBEditor
             /// </summary>
             private void CreateDocument()
             {
-                this.mIsLoaded = true;
                 this.mDatabaseSchemaVersion = METADATA_ID_DATABASE_SCHEMA_VERSION;
-                if (this.DocumentOpen != null)
-                {
-                    this.DocumentOpen.Invoke(this, true);
-                }
+                this.IsLoaded = true;
             }
 
             /// <summary>
@@ -457,6 +487,24 @@ namespace HtmlElementsDBEditor
             /// </summary>
             private void UpdateDocumentChanges()
             {
+                String connectionString = $"Data Source={this.mDocumentPath}; Version=3;";
+                using (SQLiteConnection dbConnection = new SQLiteConnection(connectionString))
+                {
+                    dbConnection.Open();
+                    SQLiteTransaction dbTransaction = dbConnection.BeginTransaction();
+                    try
+                    {
+                        StoreDatabaseSchemaV1(dbConnection);
+
+                        dbTransaction.Commit();
+                        this.IsModified = false;
+                    }
+                    catch
+                    {
+                        dbTransaction.Rollback();
+                        throw;
+                    }
+                }
             }
 
             /// <summary>
@@ -467,34 +515,56 @@ namespace HtmlElementsDBEditor
             /// </param>
             private void SaveNewDocument(String documentFilePath)
             {
+                // Delete existing files before creating the new file.
+                if (File.Exists(documentFilePath))
+                {
+                    File.Delete(documentFilePath);
+                }
+
                 SQLiteConnection.CreateFile(documentFilePath);
                 String connectionString = $"Data Source={documentFilePath}; Version=3;";
                 using (SQLiteConnection dbConnection = new SQLiteConnection(connectionString))
                 {
                     dbConnection.Open();
-
-                    // Create the MetaDataTable table
-                    using (SQLiteCommand createCommand = dbConnection.CreateCommand())
+                    SQLiteTransaction dbTransaction = dbConnection.BeginTransaction();
+                    try
                     {
-                        createCommand.CommandText = SQLite_CreateMetaDataTable;
-                        createCommand.CommandType = CommandType.Text;
-                        createCommand.ExecuteNonQuery();
+                        // Create the MetaDataTable table
+                        using (SQLiteCommand createCommand = dbConnection.CreateCommand())
+                        {
+                            createCommand.CommandText = SQLite_CreateMetaDataTable;
+                            createCommand.CommandType = CommandType.Text;
+                            createCommand.ExecuteNonQuery();
+                        }
+
+                        // Create the AttributeTypes table
+                        using (SQLiteCommand createCommand = dbConnection.CreateCommand())
+                        {
+                            createCommand.CommandText = SQLite_CreateAttributeTypes;
+                            createCommand.CommandType = CommandType.Text;
+                            createCommand.ExecuteNonQuery();
+                        }
+
+                        // Store the database schema version number
+                        using (SQLiteCommand createCommand = dbConnection.CreateCommand())
+                        {
+                            createCommand.CommandText = SQLite_Insert_MetaData_DatabaseSchemaVersion;
+                            createCommand.CommandType = CommandType.Text;
+                            createCommand.ExecuteNonQuery();
+                        }
+
+                        SQLiteDataAccess_v1 writer = new SQLiteDataAccess_v1(dbConnection);
+                        List<AttributeTypeDTO> attributeTypesList = this.mAttributeDataTypes.ConvertAll<AttributeTypeDTO>(u => u.Data);
+                        writer.AddUpdateDelete_AttributeTypes(attributeTypesList, null, null);
+
+                        dbTransaction.Commit();
+                        this.IsModified = false;
+                        this.mDocumentPath = documentFilePath;
                     }
-
-                    // Create the AttributeTypes table
-                    using (SQLiteCommand createCommand = dbConnection.CreateCommand())
+                    catch
                     {
-                        createCommand.CommandText = SQLite_CreateAttributeTypes;
-                        createCommand.CommandType = CommandType.Text;
-                        createCommand.ExecuteNonQuery();
-                    }
-
-                    // Store the database schema version number
-                    using (SQLiteCommand createCommand = dbConnection.CreateCommand())
-                    {
-                        createCommand.CommandText = SQLite_Insert_MetaData_DatabaseSchemaVersion;
-                        createCommand.CommandType = CommandType.Text;
-                        createCommand.ExecuteNonQuery();
+                        dbTransaction.Rollback();
+                        throw;
                     }
                 }
             }

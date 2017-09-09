@@ -80,6 +80,7 @@
     <Compile Include="AttributeTypesDialog.Designer.cs">
       <DependentUpon>AttributeTypesDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="ObjectContainer.cs" />
     <Compile Include="SQLiteDataAccess_v1.cs" />
     <Compile Include="DataStorageItem.cs" />
     <Compile Include="DataStore.cs" />

@@ -5,7 +5,7 @@ namespace HtmlElementsDB
     /// <summary>
     ///     DTO for entries from the HtmlElement table.
     /// </summary>
-    public class HtmlElementDTO
+    public class HtmlElementDTO : ICloneable
     {
         #region Private data members
             private uint mHtmlElementId;
@@ -14,6 +14,10 @@ namespace HtmlElementsDB
         #endregion // Private data members
 
         #region Construction
+            private HtmlElementDTO()
+            {
+            }
+
             public HtmlElementDTO
             (
                 uint htmlElementId,
@@ -40,5 +44,18 @@ namespace HtmlElementsDB
                 set { this.mHtmlElementTypeId = value; }
             }
         #endregion Public properties
+
+        #region ICloneable
+            public Object Clone()
+            {
+                return new HtmlElementDTO()
+                {
+                    mHtmlElementId = this.mHtmlElementId,
+                    mElementTag = this.mElementTag,
+                    mHtmlElementTypeId = this.mHtmlElementTypeId
+                };
+            }
+        #endregion ICloneable
+
     } // class HtmlElementDTO
 } // namespace HtmlElementsDBEditor

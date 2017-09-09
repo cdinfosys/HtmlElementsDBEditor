@@ -9,7 +9,7 @@ namespace HtmlElementsDBEditor
     /// <summary>
     ///     Object to split DataStorageItem records into updated, modified, deleted, and untouched collections
     /// </summary>
-    internal class AddUpdateDeleteSorter<T>
+    internal class AddUpdateDeleteSorter<T> where T : class, ICloneable
     {
         #region Private data members
             /// <summary>

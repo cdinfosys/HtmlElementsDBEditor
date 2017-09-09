@@ -10,9 +10,9 @@ namespace HtmlElementsDBEditor
     ///     Template class for wrapping items that can be edited, stored in lists
     /// </summary>
     /// <typeparam name="T">
-    ///     Contained item type
+    ///     Contained item type. The type must implement the ICloneable interface.
     /// </typeparam>
-    internal class DataStorageItem<T>
+    internal class DataStorageItem<T> : ICloneable where T : class, ICloneable
     {
         /// <summary>
         ///     Flags to track how a record was added, modified, or deleted.
@@ -39,6 +39,13 @@ namespace HtmlElementsDBEditor
         #endregion Privata properties
 
         #region Construction
+            /// <summary>
+            ///     Default constructor is hidden. Only available to the <see cref="Clone" method/>
+            /// </summary>
+            private DataStorageItem()
+            {
+            }
+
             /// <summary>
             ///     Construct an object that wraps a data object.
             /// </summary>
@@ -138,6 +145,19 @@ namespace HtmlElementsDBEditor
             public void ClearTrackingFlags()
             {
                 this.mTrackingFlags = ChangeTrackingFlags.None;
+            }
+
+            /// <summary>
+            ///     Creates a copy of the object. The flags as well as the object referenced by Object are cloned.
+            /// </summary>
+            /// <returns></returns>
+            public Object Clone()
+            {
+                return new DataStorageItem<T>()
+                {
+                    mTrackingFlags = this.mTrackingFlags,
+                    mData = this.mData.Clone() as T
+                };
             }
         #endregion Public methods
 

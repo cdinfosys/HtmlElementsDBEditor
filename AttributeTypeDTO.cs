@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HtmlElementsDB
 {
-    public class AttributeTypeDTO
+    public class AttributeTypeDTO : ICloneable
     {
         #region Private data members
             private uint mAttributeTypeId;
@@ -14,6 +14,10 @@ namespace HtmlElementsDB
         #endregion Private data members
 
         #region Construction
+            private AttributeTypeDTO()
+            {
+            }
+
             public AttributeTypeDTO
             (
                 uint attributeTypeId,
@@ -40,5 +44,22 @@ namespace HtmlElementsDB
                 }
             }
         #endregion Public properties
+
+        #region IClonable interface
+            /// <summary>
+            ///     Creates a clone of the object by copying the values of all the data members to the new object.
+            /// </summary>
+            /// <returns>
+            ///     Returns a copy of the object.
+            /// </returns>
+            public Object Clone()
+            {
+                return new AttributeTypeDTO()
+                {
+                    mAttributeTypeId = this.mAttributeTypeId,
+                    mDescription = this.mDescription
+                };
+            }
+        #endregion IClonable interface
     } // class AttributeTypeDTO
 } // namespace HtmlElementsDB

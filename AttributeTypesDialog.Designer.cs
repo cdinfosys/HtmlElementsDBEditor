@@ -52,12 +52,14 @@
             this.okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.okButton.Name = "okButton";
             this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.OnOkButtonClicked);
             // 
             // applyButton
             // 
             resources.ApplyResources(this.applyButton, "applyButton");
             this.applyButton.Name = "applyButton";
             this.applyButton.UseVisualStyleBackColor = true;
+            this.applyButton.Click += new System.EventHandler(this.OnApplyButtonClicked);
             // 
             // attributeTypesListView
             // 
@@ -66,11 +68,13 @@
             this.attributeTypesListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.typeColumn});
             this.attributeTypesListView.FullRowSelect = true;
-            this.attributeTypesListView.LabelEdit = true;
+            this.attributeTypesListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.attributeTypesListView.HideSelection = false;
             this.attributeTypesListView.Name = "attributeTypesListView";
             this.attributeTypesListView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.attributeTypesListView.UseCompatibleStateImageBehavior = false;
             this.attributeTypesListView.View = System.Windows.Forms.View.Details;
+            this.attributeTypesListView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.OnListViewItemSelectionChanged);
             // 
             // typeColumn
             // 
@@ -88,12 +92,14 @@
             resources.ApplyResources(this.editButton, "editButton");
             this.editButton.Name = "editButton";
             this.editButton.UseVisualStyleBackColor = true;
+            this.editButton.Click += new System.EventHandler(this.OnEditButtonClicked);
             // 
             // deleteButton
             // 
             resources.ApplyResources(this.deleteButton, "deleteButton");
             this.deleteButton.Name = "deleteButton";
             this.deleteButton.UseVisualStyleBackColor = true;
+            this.deleteButton.Click += new System.EventHandler(this.OnDeleteButtonClicked);
             // 
             // AttributeTypesDialog
             // 

@@ -46,8 +46,15 @@
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.statusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.clientAreaPanel = new System.Windows.Forms.Panel();
+            this.htmlElementsListBox = new System.Windows.Forms.ListBox();
+            this.horizontalSplitter = new System.Windows.Forms.Splitter();
+            this.attributesTabControl = new System.Windows.Forms.TabControl();
+            this.attributesTabPage = new System.Windows.Forms.TabPage();
+            this.cssPropertiesTabPage = new System.Windows.Forms.TabPage();
             this.menuBar.SuspendLayout();
             this.statusBar.SuspendLayout();
+            this.clientAreaPanel.SuspendLayout();
+            this.attributesTabControl.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuBar
@@ -161,8 +168,42 @@
             // 
             this.clientAreaPanel.BackColor = System.Drawing.SystemColors.Window;
             this.clientAreaPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.clientAreaPanel.Controls.Add(this.attributesTabControl);
+            this.clientAreaPanel.Controls.Add(this.horizontalSplitter);
+            this.clientAreaPanel.Controls.Add(this.htmlElementsListBox);
             resources.ApplyResources(this.clientAreaPanel, "clientAreaPanel");
             this.clientAreaPanel.Name = "clientAreaPanel";
+            // 
+            // htmlElementsListBox
+            // 
+            resources.ApplyResources(this.htmlElementsListBox, "htmlElementsListBox");
+            this.htmlElementsListBox.FormattingEnabled = true;
+            this.htmlElementsListBox.Name = "htmlElementsListBox";
+            // 
+            // horizontalSplitter
+            // 
+            this.horizontalSplitter.BackColor = System.Drawing.SystemColors.ButtonShadow;
+            resources.ApplyResources(this.horizontalSplitter, "horizontalSplitter");
+            this.horizontalSplitter.Name = "horizontalSplitter";
+            this.horizontalSplitter.TabStop = false;
+            // 
+            // attributesTabControl
+            // 
+            this.attributesTabControl.Controls.Add(this.attributesTabPage);
+            this.attributesTabControl.Controls.Add(this.cssPropertiesTabPage);
+            resources.ApplyResources(this.attributesTabControl, "attributesTabControl");
+            this.attributesTabControl.Name = "attributesTabControl";
+            this.attributesTabControl.SelectedIndex = 0;
+            // 
+            // attributesTabPage
+            // 
+            resources.ApplyResources(this.attributesTabPage, "attributesTabPage");
+            this.attributesTabPage.Name = "attributesTabPage";
+            // 
+            // cssPropertiesTabPage
+            // 
+            resources.ApplyResources(this.cssPropertiesTabPage, "cssPropertiesTabPage");
+            this.cssPropertiesTabPage.Name = "cssPropertiesTabPage";
             // 
             // FrameWindow
             // 
@@ -178,6 +219,8 @@
             this.menuBar.PerformLayout();
             this.statusBar.ResumeLayout(false);
             this.statusBar.PerformLayout();
+            this.clientAreaPanel.ResumeLayout(false);
+            this.attributesTabControl.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -202,6 +245,11 @@
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem attributeTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cssPropertyTypesMenuItem;
+        private System.Windows.Forms.TabControl attributesTabControl;
+        private System.Windows.Forms.TabPage attributesTabPage;
+        private System.Windows.Forms.TabPage cssPropertiesTabPage;
+        private System.Windows.Forms.Splitter horizontalSplitter;
+        private System.Windows.Forms.ListBox htmlElementsListBox;
     }
 }
 
